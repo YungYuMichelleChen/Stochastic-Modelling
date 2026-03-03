@@ -18,26 +18,24 @@ The project implements:
 - Yield curve construction & spline interpolation  
 - Large-scale Monte Carlo rate simulation (100,000 paths)  
 
-The framework emphasizes:
 
-- Numerical stability  
-- Calibration robustness  
-- Computational efficiency  
-- Clear separation between pricing, calibration, and simulation logic  
-
-This structure reflects production-style quantitative development workflows used on derivatives desks.
 
 ---
 
 ## Project Structure
 
+1. Heston Model Calibration
+2. Bates Model (Heston + Jumps)
+3. Exotic Pricing – Asian Option
+4. Interest Rate Modeling – CIR Framework
+
 
 
 ---
 
-# 1. Heston Model Calibration
+## 1. Heston Model Calibration
 
-## Model Dynamics
+### Model Dynamics
 
 Under the risk-neutral measure:
 
@@ -112,7 +110,7 @@ This changes the shape of the pricing function, which affects optimization — e
 
 ---
 
-# 2. Bates Model (Heston + Jumps)
+## 2. Bates Model (Heston + Jumps)
 
 Extends the Heston model with a Poisson jump component:
 
@@ -135,7 +133,7 @@ Focus areas:
 
 ---
 
-The client now wants a product that runs for 60 trading days instead of just 15. Since the longer timeframe increases the chance of sudden price jumps, I’m extending the standard Heston model by adding a Poisson jump component. This combination is known as the Bates (1996) model. My goal is to calibrate this model so that it matches the market prices of all 60-day SM vanilla options listed in the data sheet. Once the calibration is done, the desk will be able to price and manage the risk of any exotic structure maturing in about two months.
+Now runs for 60 trading days instead of just 15. Since the longer timeframe increases the chance of sudden price jumps, I’m extending the standard Heston model by adding a Poisson jump component. This combination is known as the Bates (1996) model. My goal is to calibrate this model so that it matches the market prices of all 60-day SM vanilla options listed in the data sheet. Once the calibration is done, the desk will be able to price and manage the risk of any exotic structure maturing in about two months.
 
 The plan to implement:
 First, I’ll import the market quotes for the 60-day options — both calls and puts, covering five different strikes. For each instrument, I’ll calculate the theoretical price using the Lewis (2001) Fourier formula applied to the Bates characteristic function. To see how well the model fits the market, I’ll measure the difference between the model prices and the actual market prices using a Mean-Squared-Error (MSE) metric. Then I’ll run scipy.optimize.minimize with the L-BFGS-B method to find the set of parameters that minimises this MSE. Once the calibration is complete, I’ll plot the model prices against the market quotes and report the final parameter values.
@@ -150,7 +148,7 @@ For the jump component, the estimated jump intensity lambda is around 0.65 per y
 I also tested the calibration by restarting it from seven different random seeds, and each run landed within 3% of the original objective value, a good sign that the problem is well posed and not prone to troublesome local minima.
 
 
-# 3. Exotic Pricing – Asian Option
+## 3. Exotic Pricing – Asian Option
 
 ATM Asian Call (20-day maturity) priced using:
 
@@ -184,9 +182,9 @@ For this pricing, it's assumed there are 250 trading days in a year. I have kept
 Based on the descripted work, the fair value of the Asian call option, before any fees, comes out to *\$3.73*. Statistically, the true fair price would fall within a 95\% confidence interval between *\$3.7094* and *\$3.7548* if we were to repeat this calculation over and over again.
 As agreed, a 4\% service margin is applied to cover the execution costs, bringing the final price payable today to \$3.88.
 
-# 4. Interest Rate Modeling – CIR Framework
+## 4. Interest Rate Modeling – CIR Framework
 
-## Term Structure Construction
+### Term Structure Construction
 
 - Euribor market rates  
 - Yield curve bootstrapping  
@@ -195,7 +193,7 @@ As agreed, a 4\% service margin is applied to cover the execution costs, bringin
 
 ---
 
-## CIR Model
+### CIR Model
 
 $dr_t = \kappa(\theta - r_t)dt + \sigma \sqrt{r_t} dW_t$
 
@@ -203,7 +201,7 @@ Calibration performed against the interpolated term structure.
 
 ---
 
-## Monte Carlo Simulation
+### Monte Carlo Simulation
 
 - 100,000 paths  
 - Daily discretization  
